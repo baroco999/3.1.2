@@ -23,27 +23,12 @@ public class UserController {
 
     @GetMapping(value = "/admin")
     public String getAllUsers(ModelMap model) {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        model.addAttribute("currentUser", currentUser);
         model.addAttribute("listOfUsers", userRepository.findAll());
+        model.addAttribute("role_u", new Role("ROLE_USER"));
+        model.addAttribute("role_a", new Role("ROLE_ADMIN"));
         return "index";
-    }
-
-    @GetMapping(value = "/admin/edit")
-    public String editUser(@RequestParam long id, ModelMap model) {
-        User user = userRepository.getOne(id);
-        model.addAttribute("user", user);
-        Role[] roles = user.getRoles().toArray(new Role[0]);
-        if(roles.length == 1) {
-            model.addAttribute("id1", roles[0].getId());
-        } else if(roles.length == 2) {
-            if (roles[0].getRole().equals("ROLE_USER")) {
-                model.addAttribute("id1", roles[0].getId());
-                model.addAttribute("id2", roles[1].getId());
-            } else if (roles[0].getRole().equals("ROLE_ADMIN")){
-                model.addAttribute("id1", roles[1].getId());
-                model.addAttribute("id2", roles[0].getId());
-            }
-        }
-        return "edit";
     }
 
     @PostMapping(value = "/admin/edit")
@@ -62,11 +47,6 @@ public class UserController {
         return "redirect:/admin";
     }
 
-    @GetMapping(value = "/admin/add")
-    public String addUser() {
-        return "add";
-    }
-
     @PostMapping(value = "/admin/add")
     public String saveUser(@ModelAttribute("user") User user, @ModelAttribute("role1") Role role1,
                            @ModelAttribute("role2") Role role2){
@@ -78,7 +58,7 @@ public class UserController {
         }
 
         user.setRoles(rSet);
-        userRepository.saveAndFlush(user);;
+        userRepository.saveAndFlush(user);
         return "redirect:/admin";
     }
 
@@ -90,7 +70,7 @@ public class UserController {
 
     @GetMapping(value = "/admin/clearAll")
     public String clearAll() {
-        userRepository.deleteAllInBatch();
+        userRepository.deleteAll();
         return "redirect:/admin";
     }
 
@@ -98,6 +78,8 @@ public class UserController {
     public String getUserinfo(ModelMap model) {
         User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         model.addAttribute("user", user);
+        model.addAttribute("role_u", new Role("ROLE_USER"));
+        model.addAttribute("role_a", new Role("ROLE_ADMIN"));
         return "userinfo";
     }
 
